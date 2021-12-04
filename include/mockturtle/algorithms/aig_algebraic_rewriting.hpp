@@ -334,7 +334,7 @@ private:
                             {
                               level_2 = ntk.level( node_layer_1 );
 
-                              if ( !( level_2 < level_1 - 4 || level_1 < level_2 - 4 ) )
+                              if ( !( level_2 < level_1 - 2 || level_1 < level_2 - 2 ) )
                               {
                                 rule_not_ok = true;
                                 return false;
@@ -421,7 +421,7 @@ private:
     }
     else if ( substitution == true )
     {
-      signal and_x3x4 = ntk.create_and( signal_x3, signal_x4 );
+      signal and_x3x4 = ntk.create_and( !signal_x3, signal_x4 );
       signal and_x2x4 = ntk.create_and( signal_x2, signal_x4 );
       signal and_crit = ntk.create_and( signal_crit, and_x2x4 );
       signal updated_and = ntk.create_and( !and_x3x4, !and_crit );
