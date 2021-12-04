@@ -315,6 +315,7 @@ private:
     signal signal_x2;
     signal signal_crit;
 
+    //to check the two child level signals --> they difference should be at least 3 to avoid to modify the critical path
     uint32_t level_1 = 0;
     uint32_t level_2 = 0;
 
@@ -346,7 +347,7 @@ private:
                             {
                               signal_x4 = s_layer_1;
                             }
-                            else if ( ntk.is_on_critical_path( node_layer_1 ) && crit1 == false )
+                            else if ( ntk.is_on_critical_path( node_layer_1 ) && crit1 == false ) //crit1 to check that there are not two children both on critical path
                             {
                               crit1 = true;
                               if ( ntk.is_complemented( s_layer_1 ) )
