@@ -40,7 +40,7 @@ TEST_CASE( "Simple associativity (AND)", "[aig_algebraic_rewriting]" )
   CHECK( tts == simulate<kitty::static_truth_table<num_pis>>( aig ) );
 }
 
-TEST_CASE( "Simple associativity (OR)", "[aig_algebraic_rewriting]" )
+ TEST_CASE( "Simple associativity (OR)", "[aig_algebraic_rewriting]" )
 {
   /* create the network */
   aig_network aig;
