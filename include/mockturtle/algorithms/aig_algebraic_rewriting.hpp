@@ -25,24 +25,25 @@ class aig_algebraic_rewriting_impl
 
 public:
   aig_algebraic_rewriting_impl( Ntk& ntk )
-    : ntk( ntk )
+      : ntk( ntk )
   {
     static_assert( has_level_v<Ntk>, "Ntk does not implement depth interface." );
   }
 
   void run()
   {
-    bool cont{true}; /* continue trying */
+    bool cont{ true }; /* continue trying */
     while ( cont )
     {
       cont = false; /* break the loop if no updates can be made */
-      ntk.foreach_gate( [&]( node n ){
-        if ( try_algebraic_rules( n ) )
-        {
-          ntk.update_levels();
-          cont = true;
-        }
-      });
+      ntk.foreach_gate( [&]( node n )
+                        {
+                          if ( try_algebraic_rules( n ) )
+                          {
+                            ntk.update_levels();
+                            cont = true;
+                          }
+                        } );
     }
   }
 
@@ -65,9 +66,9 @@ private:
   bool try_associativity( node n )
   {
     /* TODO */
-   //return false;
+    //return false;
 
-    bool level_zero = false;    //to check that the children of the node are not both on level zero
+    bool level_zero = false;         //to check that the children of the node are not both on level zero
     bool child_on_crit_path = false; //it goes to true if one child is on the critical path --> if both signals are on the critical path the property should not be applied
     bool substitution = false;
     bool associativity_not_ok = false;
@@ -84,7 +85,7 @@ private:
 
     if ( ntk.is_on_critical_path( n ) )
     {
-       ntk.foreach_fanin( n, [&]( signal const& s )
+      ntk.foreach_fanin( n, [&]( signal const& s )
                          {
                            node node_child = ntk.get_node( s );
                            signal signal_child = s;
@@ -96,7 +97,6 @@ private:
                              associativity_not_ok = true;
                              return false; //both children are on the level zero, so the operation cannot be done
                            }
-
 
                            if ( first_child == false )
                            {
@@ -112,8 +112,7 @@ private:
                                return false;
                              }
                            }
-                          
-                            
+
                            if ( ntk.is_on_critical_path( node_child ) )
                            {                                    //evaluated only if it is on the critical path
                              if ( child_on_crit_path == false ) //to check if both children on the critical path
@@ -123,7 +122,6 @@ private:
                                associativity_not_ok = true;
                                return false; // if both children are on critical path no operation is applied
                              }
-                              
 
                              if ( ntk.level( node_child ) != 0 )
                              {
@@ -151,36 +149,34 @@ private:
                                {
                                  associativity_not_ok = true;
                                  return false; // if the node is on the critical path and it is complemented the operation cannot be done
-                               }                                
+                               }
                              }
                              else
                              {
                                associativity_not_ok = true;
                                return false; //if the node is a PI and it is on the critical path, the operation cannot be applied
                              }
-                               
                            }
                            else
                              snode_child_to_move = signal_child;
-                         });
-  }
-  else
-    return false;
+                         } );
+    }
+    else
+      return false;
 
-  if (associativity_not_ok == true)
-  {
-    return false;
-  }
-  else if (substitution == true )
-  {                                                                              //creation of the new 2 AND and removal of the old ones
-    signal new_and_signal = ntk.create_and( snode_child_to_move, snode_grand_to_move ); //creation of new AND node
-    signal updated_and = ntk.create_and( new_and_signal, snode_gran_critical );
-    ntk.substitute_node( n, updated_and );
-    return true;
-  }
-  else
-    return false;
-
+    if ( associativity_not_ok == true )
+    {
+      return false;
+    }
+    else if ( substitution == true )
+    {                                                                                     //creation of the new 2 AND and removal of the old ones
+      signal new_and_signal = ntk.create_and( snode_child_to_move, snode_grand_to_move ); //creation of new AND node
+      signal updated_and = ntk.create_and( new_and_signal, snode_gran_critical );
+      ntk.substitute_node( n, updated_and );
+      return true;
+    }
+    else
+      return false;
   }
 
   /* Try the distributivity rule on node n. Return true if the network is updated. */
@@ -188,7 +184,7 @@ private:
   {
     /* TODO */
     //return false;
-     bool first_child_evaluation = false; //to save the first pair of grandchild to be compared with the other two
+    bool first_child_evaluation = false; //to save the first pair of grandchild to be compared with the other two
     bool flag_child1 = false;            //to know which operand the code is looking at + correct saving
     bool flag_child2 = false;
     bool distributivity_not_ok = false;
@@ -235,21 +231,26 @@ private:
                                                     }
                                                     else if ( first_child_evaluation == true )
                                                     {
-                                                        if ( ( signal_grandchild == first_gran_op1 || signal_grandchild == first_gran_op2 ) && sharing == false )
+                                                      if ( ( signal_grandchild == first_gran_op1 || signal_grandchild == first_gran_op2 ) && sharing == false )
+                                                      {
+                                                        if ( ntk.is_on_critical_path( node_granchild ) )
                                                         {
-                                                          if ( ntk.is_on_critical_path( node_granchild ) )                                                          
-                                                          {
-                                                            signal_gran_shared = signal_grandchild;
-                                                            sharing = true;
-                                                          }
-                                                          else
-                                                          {
-                                                            distributivity_not_ok = true;
-                                                            return false;
-                                                          }
+                                                          signal_gran_shared = signal_grandchild;
+                                                          sharing = true;
                                                         }
+                                                        else
+                                                        {
+                                                          distributivity_not_ok = true;
+                                                          return false;
+                                                        }
+                                                      }
                                                       else
                                                         signal_not_crit_child2 = signal_grandchild;
+                                                    }
+                                                    else
+                                                    {
+                                                      distributivity_not_ok = true;
+                                                      return false;
                                                     }
                                                   } );
                              }
@@ -270,8 +271,7 @@ private:
     {
       return false;
     }
-  
-    
+
     if ( distributivity_not_ok == true )
     {
       return false;
@@ -280,21 +280,35 @@ private:
     { //creation of the new 2 AND and removal of the old ones
       if ( signal_gran_shared == first_gran_op1 )
       {
-        signal new_and_not_critical = ntk.create_and( !first_gran_op2, !signal_not_crit_child2 );
-        signal updated_and = ntk.create_and( first_gran_op1, !new_and_not_critical );
-        ntk.substitute_node( n, !updated_and ); //VEDERE COME NEGARE SEGNALE ULTIMA PORTA
-        //creazione AND con gli altri due operandi con gli ingressi complementati rispetto ad adesso
-        //creazione AND del nodo padre dal op1 e dal complementato della porta
-        //sostituzione delle due AND
-        //complemento segnale in uscita
-        return true;
+        if ( !ntk.is_on_critical_path( ntk.get_node( first_gran_op2 ) ) && !ntk.is_on_critical_path( ntk.get_node( signal_not_crit_child2 ) ) )
+        {
+          signal new_and_not_critical = ntk.create_and( !first_gran_op2, !signal_not_crit_child2 );
+          signal updated_and = ntk.create_and( first_gran_op1, !new_and_not_critical );
+          ntk.substitute_node( n, !updated_and );
+          //creazione AND con gli altri due operandi con gli ingressi complementati rispetto ad adesso
+          //creazione AND del nodo padre dal op1 e dal complementato della porta
+          //sostituzione delle due AND
+          //complemento segnale in uscita
+          return true;
+        }
+        else
+        {
+          return false;
+        }
       }
       else if ( signal_gran_shared == first_gran_op2 )
       {
-        signal new_and_not_critical = ntk.create_and( !first_gran_op1, !signal_not_crit_child2 );
-        signal updated_and = ntk.create_and( first_gran_op2, !new_and_not_critical );
-        ntk.substitute_node( n, !updated_and ); //VEDERE COME NEGARE SEGNALE ULTIMA PORTA
-        return true;
+        if ( !ntk.is_on_critical_path( ntk.get_node( first_gran_op1 ) ) && !ntk.is_on_critical_path( ntk.get_node( signal_not_crit_child2 ) ) )
+        {
+          signal new_and_not_critical = ntk.create_and( !first_gran_op1, !signal_not_crit_child2 );
+          signal updated_and = ntk.create_and( first_gran_op2, !new_and_not_critical );
+          ntk.substitute_node( n, !updated_and );
+          return true;
+        }
+        else
+        {
+          return false;
+        }
       }
       else
         return false;
@@ -302,15 +316,16 @@ private:
     return false;
   }
 
-  bool try_three_layers_distributivity(node n) {
-    bool first_layer_level = false; //to save the first layer level to be compared with the one on the critical path. It is advantageous only if it is smaller of at least 4 units
+  bool try_three_layers_distributivity( node n )
+  {
+    bool first_layer_level = false;  //to save the first layer level to be compared with the one on the critical path. It is advantageous only if it is smaller of at least 4 units
     bool second_layer_level = false; //this gest true when the node x3 has been analyzed --> not on critical path
-    bool rule_not_ok = false; //this gest true in any case this realtion cannot be applicable 
-    bool substitution = false; //check when the condition to apply the rule is 
+    bool rule_not_ok = false;        //this gest true in any case this realtion cannot be applicable
+    bool substitution = false;       //check when the condition to apply the rule is
     bool crit1 = false;
     bool crit2 = false;
 
-    signal signal_x4; 
+    signal signal_x4;
     signal signal_x3;
     signal signal_x2;
     signal signal_crit;
@@ -319,102 +334,100 @@ private:
     uint32_t level_1 = 0;
     uint32_t level_2 = 0;
 
-    if ( ntk.is_on_critical_path( n ))
+    if ( ntk.is_on_critical_path( n ) )
     {
       ntk.foreach_fanin( n, [&]( signal const& f )
-                          {
-                            node node_layer_1 = ntk.get_node( f );
-                            signal s_layer_1 = f;
+                         {
+                           node node_layer_1 = ntk.get_node( f );
+                           signal s_layer_1 = f;
 
-                            if ( first_layer_level == false )
-                            {
-                              level_1 = ntk.level( node_layer_1 );
-                              first_layer_level = true;
-                            }
-                            else
-                            {
-                              level_2 = ntk.level( node_layer_1 );
+                           if ( first_layer_level == false )
+                           {
+                             level_1 = ntk.level( node_layer_1 );
+                             first_layer_level = true;
+                           }
+                           else
+                           {
+                             level_2 = ntk.level( node_layer_1 );
 
-                              if ( !( level_2 < level_1 - 2 || level_1 < level_2 - 2 ) )
-                              {
-                                rule_not_ok = true;
-                                return false;
-                              }
+                             if ( !( level_2 < level_1 - 2 || level_1 < level_2 - 2 ) )
+                             {
+                               rule_not_ok = true;
+                               return false;
+                             }
+                           }
 
-                            }
-
-                            if ( !ntk.is_on_critical_path( node_layer_1 )) //save the detail of the node x4 that needs to be moved of 4 steps
-                            {
-                              signal_x4 = s_layer_1;
-                            }
-                            else if ( ntk.is_on_critical_path( node_layer_1 ) && crit1 == false ) //crit1 to check that there are not two children both on critical path
-                            {
-                              crit1 = true;
-                              if ( ntk.is_complemented( s_layer_1 ) )
-                              {
-                                ntk.foreach_fanin( node_layer_1, [&]( signal const& s )
+                           if ( !ntk.is_on_critical_path( node_layer_1 ) ) //save the detail of the node x4 that needs to be moved of 4 steps
+                           {
+                             signal_x4 = s_layer_1;
+                           }
+                           else if ( ntk.is_on_critical_path( node_layer_1 ) && crit1 == false ) //crit1 to check that there are not two children both on critical path
+                           {
+                             crit1 = true;
+                             if ( ntk.is_complemented( s_layer_1 ) )
+                             {
+                               ntk.foreach_fanin( node_layer_1, [&]( signal const& s )
+                                                  {
+                                                    node node_layer_2 = ntk.get_node( s );
+                                                    signal s_layer_2 = s;
+                                                    if ( !ntk.is_on_critical_path( node_layer_2 ) && second_layer_level == false )
                                                     {
-                                                      node node_layer_2 = ntk.get_node( s );
-                                                      signal s_layer_2 = s;
-                                                      if ( !ntk.is_on_critical_path( node_layer_2 ) && second_layer_level == false )
+                                                      signal_x3 = s_layer_2;
+                                                      second_layer_level = true;
+                                                    }
+                                                    else if ( ntk.is_on_critical_path( node_layer_2 ) && crit2 == false )
+                                                    {
+                                                      crit2 = true;
+                                                      if ( ntk.is_complemented( s_layer_2 ) )
                                                       {
-                                                        signal_x3 = s_layer_2;
-                                                        second_layer_level = true;
-                                                      }
-                                                      else if ( ntk.is_on_critical_path( node_layer_2 ) && crit2 == false )
-                                                      {
-                                                        crit2 = true;
-                                                        if ( ntk.is_complemented( s_layer_2 ) )
-                                                        {
-                                                          ntk.foreach_fanin( node_layer_2, [&]( signal const& k )
-                                                                            { 
-                                                                                node node_layer_3 = ntk.get_node( k );
-                                                                                signal s_layer_3 = k;
-                                                                                if ( ntk.is_on_critical_path( node_layer_3 ) && substitution == false )
-                                                                                {
-                                                                                    signal_crit = s_layer_3;
-                                                                                    substitution = true;                                                                             
-                                                                                  
-                                                                                }
-                                                                                else if ( ntk.is_on_critical_path( node_layer_3 ) && substitution == true )
-                                                                                {
-                                                                                  rule_not_ok = true; //if both are on critical path the rule is not applicable and convenient
-                                                                                  return false;
-                                                                                }
-                                                                                else
-                                                                                {
-                                                                                  signal_x2 = s_layer_3;
-                                                                                }
-                                                          } );
-                                                        }
-                                                        else
-                                                        {
-                                                          rule_not_ok = true;
-                                                          return false;
-                                                        }
+                                                        ntk.foreach_fanin( node_layer_2, [&]( signal const& k )
+                                                                           {
+                                                                             node node_layer_3 = ntk.get_node( k );
+                                                                             signal s_layer_3 = k;
+                                                                             if ( ntk.is_on_critical_path( node_layer_3 ) && substitution == false )
+                                                                             {
+                                                                               signal_crit = s_layer_3;
+                                                                               substitution = true;
+                                                                             }
+                                                                             else if ( ntk.is_on_critical_path( node_layer_3 ) && substitution == true )
+                                                                             {
+                                                                               rule_not_ok = true; //if both are on critical path the rule is not applicable and convenient
+                                                                               return false;
+                                                                             }
+                                                                             else
+                                                                             {
+                                                                               signal_x2 = s_layer_3;
+                                                                             }
+                                                                           } );
                                                       }
                                                       else
                                                       {
                                                         rule_not_ok = true;
                                                         return false;
                                                       }
-                                                    } );
-                              }
-                              else //if the node is on the critical path, but it is not complemented the following gate is not a OR, so the rule is not applicable
-                              {
-                                rule_not_ok = true;
-                                return false;
-                              }
-                            }
-                            else
-                            {
-                              rule_not_ok = true;
-                              return false;
-                            }
-                          } );
+                                                    }
+                                                    else
+                                                    {
+                                                      rule_not_ok = true;
+                                                      return false;
+                                                    }
+                                                  } );
+                             }
+                             else //if the node is on the critical path, but it is not complemented the following gate is not a OR, so the rule is not applicable
+                             {
+                               rule_not_ok = true;
+                               return false;
+                             }
+                           }
+                           else
+                           {
+                             rule_not_ok = true;
+                             return false;
+                           }
+                         } );
     }
     else
-        return false;
+      return false;
 
     if ( rule_not_ok == true )
     {
@@ -445,7 +458,7 @@ void aig_algebraic_rewriting( Ntk& ntk )
 {
   static_assert( std::is_same_v<typename Ntk::base_type, aig_network>, "Ntk is not an AIG" );
 
-  depth_view dntk{ntk};
+  depth_view dntk{ ntk };
   detail::aig_algebraic_rewriting_impl p( dntk );
   p.run();
 }
