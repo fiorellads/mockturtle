@@ -192,7 +192,6 @@ private:
   bool try_distributivity( node n )
   {
     /* TODO */
-    // return false;
     bool first_child_evaluation = false; //to save the first pair of grandchild to be compared with the other two
     bool flag_child1 = false;            //to know which operand the code is looking at + correct saving
     bool flag_child2 = false;
@@ -204,8 +203,6 @@ private:
 
     signal first_gran_op1, first_gran_op2; //the two operands of the first evaluated child
 
-    node test;
-
     if ( ntk.is_on_critical_path( n ) )
     {
       ntk.foreach_fanin( n, [&]( signal const& s )
@@ -216,7 +213,7 @@ private:
                            if ( ntk.level( node_child ) == 0 )
                            {
                              distributivity_not_ok = true;
-                             return false; //if at least one child is at level zero the operation cannot be performed
+                             return; //if at least one child is at level zero the operation cannot be performed
                            }
 
                            if ( ntk.is_on_critical_path( node_child ) )
@@ -250,29 +247,31 @@ private:
                                                         else
                                                         {
                                                           distributivity_not_ok = true;
-                                                          return false;
+                                                          return;
                                                         }
                                                       }
                                                       else
+                                                      {
                                                         signal_not_crit_child2 = signal_grandchild;
+                                                      }
                                                     }
                                                     else
                                                     {
                                                       distributivity_not_ok = true;
-                                                      return false;
+                                                      return;
                                                     }
-                                                  } );
+                               } );
                              }
                              else
                              {
                                distributivity_not_ok = true;
-                               return false; // if the node is on the critical path and it is NOT complemented the operation cannot be done
+                               return; // if the node is on the critical path and it is NOT complemented the operation cannot be done
                              }
                            }
                            else
                            {
                              distributivity_not_ok = true;
-                             return false; //if one child is not on the critical path they are not sharing the common signal on the critical path and the opeation cannot be evaluated
+                             return; //if one child is not on the critical path they are not sharing the common signal on the critical path and the opeation cannot be evaluated
                            }
                          } );
     }
@@ -320,7 +319,9 @@ private:
         }
       }
       else
+      {
         return false;
+      }
     }
     return false;
   }
