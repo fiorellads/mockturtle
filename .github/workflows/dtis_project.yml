@@ -1,12 +1,6 @@
 name: Linux CI
 
-on:
-  push:
-    branches:
-    - v2021-algebraic
-  pull_request:
-    branches:
-    - v2021-algebraic
+on: [push, pull_request]
 
 jobs:
   build-gcc10:
